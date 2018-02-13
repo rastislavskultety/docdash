@@ -93,7 +93,7 @@ h4.name {
 }
 
 h4.name a {
-  color: #1e4a75;
+  color: #fbde2d;
 }
 
 h4.name a:hover {
@@ -152,7 +152,7 @@ section {
 
 .signature-attributes {
   font-size: 60%;
-  color: #eee;
+  color: #aeaeae;
   font-style: italic;
   font-weight: lighter;
 }
