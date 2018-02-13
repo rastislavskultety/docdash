@@ -25,7 +25,7 @@ img {
 
 a,
 a:active {
-  color: #f11c1c;
+  color: #ff4473;
   text-decoration: none;
 }
 
@@ -84,7 +84,7 @@ h4 {
 
 h4.name {
   color: #fff;
-  background: #302fa9;
+  background: #39478c;
   box-shadow: 0 .25em .5em #d3d3d3;
   border-top: 1px solid #d3d3d3;
   border-bottom: 1px solid #d3d3d3;
@@ -93,7 +93,7 @@ h4.name {
 }
 
 h4.name a {
-  color: #fc83ff;
+  color: #1e4a75;
 }
 
 h4.name a:hover {
@@ -199,7 +199,7 @@ nav ul a:active {
 
 nav a:hover,
 nav a:active {
-  color: #f11c1c;
+  color: #ff4473;
 }
 
 nav > ul {
@@ -207,7 +207,7 @@ nav > ul {
 }
 
 nav > ul > li > a {
-  color: #f11c1c;
+  color: #ff4473;
 }
 
 nav ul ul {
@@ -237,7 +237,7 @@ nav h2 {
 nav > h2 > a {
    display: block;
    margin: 10px 0 -10px;
-   color: #fbde2d !important;
+   color: #34446b !important;
 }
 
 footer {
@@ -271,7 +271,7 @@ footer {
 }
 
 .type-signature {
-  color: #CA79CA
+  color: #aeaeae
 }
 
 .type-signature:last-child {
@@ -453,7 +453,7 @@ footer {
 }
 
 span.param-type, .params td .param-type, .param-type dd {
-   color: #f11c1c;
+   color: #ff4473;
   font-family: Consolas, Monaco, 'Andale Mono', monospace
 }
 
