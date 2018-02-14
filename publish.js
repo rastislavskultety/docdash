@@ -102,6 +102,8 @@ function addParamAttributes(params) {
 }
 
 function formattype(type) {
+  var docdash = env && env.conf && env.conf.docdash || {};
+
   if (docdash.compactTypes) {
     var match = type.match(/.*[.~#](\w+)/);
     if (match) return htmlsafe(match[1]);
