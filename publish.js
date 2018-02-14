@@ -102,8 +102,10 @@ function addParamAttributes(params) {
 }
 
 function formattype(type) {
-  var match = type.match(/.*[.~#](\w+)/);
-  if (match) return htmlsafe(match[1]);
+  if (docdash.compactTypes) {
+    var match = type.match(/.*[.~#](\w+)/);
+    if (match) return htmlsafe(match[1]);
+  }
   return htmlsafe(type);
 }
 
