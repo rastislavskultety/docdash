@@ -101,11 +101,11 @@ function addParamAttributes(params) {
   }).map(updateItemName);
 }
 
-var formattype = function(type) {
+function formattype(type) {
   var match = type.match(/.*[.~#](\w+)/);
   if (match) return htmlsafe(match[1]);
   return htmlsafe(type);
-};
+}
 
 function buildItemTypeStrings(item) {
   var types = [];
@@ -587,6 +587,7 @@ exports.publish = function(taffyData, opts, tutorials) {
   view.resolveAuthorLinks = resolveAuthorLinks;
   view.tutoriallink = tutoriallink;
   view.htmlsafe = htmlsafe;
+  view.formattype = formattype;
   view.outputSourceFiles = outputSourceFiles;
 
   // once for all
