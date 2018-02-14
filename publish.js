@@ -101,11 +101,11 @@ function addParamAttributes(params) {
   }).map(updateItemName);
 }
 
-function formattype(type) {
+var formattype = function(type) {
   var match = type.match(/.*[.~#](\w+)/);
   if (match) return htmlsafe(match[1]);
   return htmlsafe(type);
-}
+};
 
 function buildItemTypeStrings(item) {
   var types = [];
