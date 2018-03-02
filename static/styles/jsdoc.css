@@ -1,4 +1,4 @@
-@import url(https://fonts.googleapis.com/css?family=Montserrat:400,700);
+@import url('https://fonts.googleapis.com/css?family=Barlow:300,400,700');
 
 * {
   box-sizing: border-box
@@ -14,7 +14,8 @@ body {
   background-color: white;
   margin: 0 auto;
   padding: 0 20px;
-  font-family: 'Helvetica Neue', Helvetica, sans-serif;
+  /* font-family: 'Helvetica Neue', Helvetica, sans-serif; */
+  font-family: 'Barlow', 'Helvetica Neue', Helvetica, sans-serif;
   font-size: 16px;
   line-height: 160%;
 }
@@ -46,7 +47,7 @@ p, ul, ol, blockquote {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Barlow', sans-serif;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -83,7 +84,7 @@ h4 {
 }
 
 h4.name {
-  color: #fff;
+  color: #aeaeae;
   background: #39478c;
   box-shadow: 0 .25em .5em #d3d3d3;
   border-top: 1px solid #d3d3d3;
@@ -120,7 +121,7 @@ tt, code, kbd, samp {
 }
 
 .class-description {
-  font-size: 130%;
+  font-size: 105%;
   line-height: 140%;
   margin-bottom: 1em;
   margin-top: 1em;
@@ -152,7 +153,7 @@ section {
 
 .signature-attributes {
   font-size: 60%;
-  color: #aeaeae;
+  color: #ffffff;
   font-style: italic;
   font-weight: lighter;
 }
@@ -190,7 +191,7 @@ nav ul {
 
 nav ul a,
 nav ul a:active {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Barlow', sans-serif;
   line-height: 18px;
   padding: 0;
   display: block;
