@@ -181,7 +181,7 @@ nav h3 {
 }
 
 nav ul {
-  font-family: 'Lucida Grande', 'Lucida Sans Unicode', arial, sans-serif;
+  /* font-family: 'Lucida Grande', 'Lucida Sans Unicode', arial, sans-serif; */
   font-size: 100%;
   line-height: 17px;
   padding: 0;
@@ -219,14 +219,21 @@ nav ul ul + ul {
   margin-top: -10px;
 }
 
-nav ul ul a {
+nav ul ul a,
+nav ul ul .menu-heading {
   color: hsl(207, 1%, 60%);
   border-left: 1px solid hsl(207, 10%, 86%);
 }
 
 nav ul ul a,
-nav ul ul a:active {
-  padding-left: 20px
+nav ul ul a:active,
+nav ul ul .menu-heading {
+  padding-left: 28px
+}
+
+.menu-heading {
+  padding-top: 8px;
+  font-size: 14px;
 }
 
 nav h2 {
@@ -642,9 +649,31 @@ span.param-type, .params td .param-type, .param-type dd {
 }
 
 /** Add a '#' to static members */
-[data-type="member"] a::before {
+[data-type="member"] a::before,
+[data-type="inner-member"] a::before {
+  content: '@';
+  display: inline-block;
+  margin-left: -15px;
+  margin-right: 5px;
+}
+
+[data-type="instance-method"] a::before {
   content: '#';
   display: inline-block;
-  margin-left: -14px;
+  margin-left: -13px;
   margin-right: 5px;
+}
+
+[data-async="true"] a::after {
+    content: 'a';
+    background-color: #d3d3d3;
+    color: white;
+    margin-left: 8px;
+    border-radius: 2px;
+    padding: 0px 3px;
+}
+
+
+ul.inner {
+  opacity: 0.5;
 }

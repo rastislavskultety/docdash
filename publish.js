@@ -312,11 +312,16 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
       } else if (!hasOwnProp.call(itemsSeen, item.longname)) {
         itemsNav += '<li>' + linktoFn(item.longname, item.name.replace(/^module:/, ''));
 
-        if (docdash.static && members.find(function(m) { return m.scope === 'static'; })) {
+        var staticMembers = members.filter(function(m) { return m.scope === 'static'; });
+        var innerMembers = members.filter(function(m) { return m.scope === 'inner'; });
+
+        var outerMethods = methods.filter(function(m) { return m.scope !== 'inner'; });
+        var innerMethods = methods.filter(function(m) { return m.scope === 'inner'; });
+
+        if (docdash.static && staticMembers.length) {
           itemsNav += "<ul class='members'>";
 
-          members.forEach(function(member) {
-            if (!member.scope === 'static') return;
+          staticMembers.forEach(function(member) {
             itemsNav += "<li data-type='member'>";
             itemsNav += linkto(member.longname, member.name);
             itemsNav += "</li>";
@@ -325,14 +330,49 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
           itemsNav += "</ul>";
         }
 
-        if (methods.length) {
+
+        if (outerMethods.length) {
           itemsNav += "<ul class='methods'>";
 
-          methods.forEach(function(method) {
-            itemsNav += "<li data-type='method'>";
+          outerMethods.forEach(function(method) {
+            itemsNav += "<li data-type='" + method.scope + "-method' data-async='" + method.async + "'>";
             itemsNav += linkto(method.longname, method.name);
             itemsNav += "</li>";
           });
+
+          itemsNav += "</ul>";
+        }
+
+        if (docdash.inner && (innerMethods.length || (docdash.static && innerMembers.length))) {
+
+          itemsNav += "<ul class='inner'>";
+          itemsNav += "<li class='menu-heading'>";
+          itemsNav += "Inner";
+          itemsNav += "</li>";
+
+          if (docdash.static && innerMembers.length) {
+            itemsNav += "<ul class='inner-members'>";
+
+            innerMembers.forEach(function(member) {
+              itemsNav += "<li data-type='inner-member'>";
+              itemsNav += linkto(member.longname, member.name);
+              itemsNav += "</li>";
+            });
+
+            itemsNav += "</ul>";
+          }
+
+          if (docdash.inner && innerMethods.length) {
+            itemsNav += "<ul class='inner-methods'>";
+
+            innerMethods.forEach(function(method) {
+              itemsNav += "<li data-type='inner-method' data-async='" + method.async + "'>";
+              itemsNav += linkto(method.longname, method.name);
+              itemsNav += "</li>";
+            });
+
+            itemsNav += "</ul>";
+          }
 
           itemsNav += "</ul>";
         }
