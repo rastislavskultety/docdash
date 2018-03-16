@@ -200,7 +200,8 @@ nav ul a:active {
 
 nav a:hover,
 nav a:active {
-  color: #ff4473;
+  /* color: #ff4473; */
+  background-color: #f0f8ff;
 }
 
 nav > ul {
