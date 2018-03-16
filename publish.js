@@ -313,6 +313,7 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
         itemsNav += '<li>' + linktoFn(item.longname, item.name.replace(/^module:/, ''));
 
         var staticMembers = members.filter(function(m) { return m.scope === 'static'; });
+        var instanceMembers = members.filter(function(m) { return m.scope === 'instance'; });
         var innerMembers = members.filter(function(m) { return m.scope === 'inner'; });
 
         var outerMethods = methods.filter(function(m) { return m.scope !== 'inner'; });
@@ -322,7 +323,20 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
           itemsNav += "<ul class='members'>";
 
           staticMembers.forEach(function(member) {
-            itemsNav += "<li data-type='member'>";
+            itemsNav += "<li data-type='static-member' data-access='" + member.access + "'>";
+            itemsNav += linkto(member.longname, member.name);
+            itemsNav += "</li>";
+          });
+
+          itemsNav += "</ul>";
+        }
+
+
+        if (instanceMembers.length) {
+          itemsNav += "<ul class='instance-members'>";
+
+          instanceMembers.forEach(function(member) {
+            itemsNav += "<li data-type='instance-member' data-access='" + member.access + "'>";
             itemsNav += linkto(member.longname, member.name);
             itemsNav += "</li>";
           });
@@ -335,8 +349,8 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
           itemsNav += "<ul class='methods'>";
 
           outerMethods.forEach(function(method) {
-            itemsNav += "<li data-type='" + method.scope + "-method' data-async='" + method.async + "'>";
-            itemsNav += linkto(method.longname, method.name);
+            itemsNav += "<li data-type='" + method.scope + "-method' data-access='" + method.access + "' data-async='" + method.async + "'>";
+            itemsNav += linkto(method.longname, method.name + ' ()');
             itemsNav += "</li>";
           });
 
@@ -346,16 +360,13 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
         if (docdash.inner && (innerMethods.length || (docdash.static && innerMembers.length))) {
 
           itemsNav += "<ul class='inner'>";
-          itemsNav += "<li class='menu-heading'>";
-          itemsNav += "Inner";
-          itemsNav += "</li>";
 
           if (docdash.static && innerMembers.length) {
             itemsNav += "<ul class='inner-members'>";
 
             innerMembers.forEach(function(member) {
-              itemsNav += "<li data-type='inner-member'>";
-              itemsNav += linkto(member.longname, member.name);
+              itemsNav += "<li data-type='inner-member' data-access='" + member.access + "'>";
+              itemsNav += linkto(member.longname, member.name + ' ()');
               itemsNav += "</li>";
             });
 
@@ -366,8 +377,8 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
             itemsNav += "<ul class='inner-methods'>";
 
             innerMethods.forEach(function(method) {
-              itemsNav += "<li data-type='inner-method' data-async='" + method.async + "'>";
-              itemsNav += linkto(method.longname, method.name);
+              itemsNav += "<li data-type='" + method.scope + "-method' data-access='" + method.access + "' data-async='" + method.async + "'>";
+              itemsNav += linkto(method.longname, method.name + ' ()');
               itemsNav += "</li>";
             });
 

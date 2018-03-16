@@ -648,15 +648,32 @@ span.param-type, .params td .param-type, .param-type dd {
   }
 }
 
-/** Add a '#' to static members */
-[data-type="member"] a::before,
-[data-type="inner-member"] a::before {
-  content: '@';
+/** Add a '~' to inner members */
+[data-type="inner-member"] a::before,
+[data-type="inner-method"] a::before {
+  content: '~';
   display: inline-block;
-  margin-left: -15px;
+  margin-left: -12px;
   margin-right: 5px;
 }
 
+[data-type="inner-member"] a,
+[data-access="private"] a,
+[data-type="inner-method"] a {
+  color: hsl(207, 1%, 60%) !important;
+}
+
+[data-type="static-method"] a,
+[data-type="instance-method"] a {
+  color: #2f6592;
+}
+
+[data-type="static-member"] a,
+[data-type="instance-member"] a {
+  color: #2f9266;
+}
+
+[data-type="instance-member"] a::before,
 [data-type="instance-method"] a::before {
   content: '#';
   display: inline-block;
@@ -671,9 +688,4 @@ span.param-type, .params td .param-type, .param-type dd {
     margin-left: 8px;
     border-radius: 2px;
     padding: 0px 3px;
-}
-
-
-ul.inner {
-  opacity: 0.5;
 }
