@@ -17,7 +17,6 @@ body {
   /* font-family: 'Helvetica Neue', Helvetica, sans-serif; */
   font-family: 'Barlow', 'Helvetica Neue', Helvetica, sans-serif;
   font-size: 16px;
-  line-height: 160%;
 }
 
 img {
@@ -65,6 +64,7 @@ h1 {
 h1.page-title {
   font-size: 48px;
   margin: 1em 30px;
+  line-height: 100%;
 }
 
 h2 {
@@ -168,6 +168,17 @@ nav {
   height: 100%;
 }
 
+nav #nav-search{
+    width: 210px;
+    height: 30px;
+    padding: 5px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 3px;
+    margin-right: 20px;
+    margin-top: 20px;
+}
+
 nav h3 {
   margin-top: 12px;
   font-size: 13px;
@@ -210,14 +221,7 @@ nav > ul {
 
 nav > ul > li > a {
   color: #ff4473;
-}
-
-nav ul ul {
-  margin-bottom: 10px
-}
-
-nav ul ul + ul {
-  margin-top: -10px;
+  /* margin-top: 10px; */
 }
 
 nav ul ul a,
@@ -303,7 +307,7 @@ footer {
 }
 
 .details dt {
-   width: 120px;
+   width: auto;
    float: left;
    padding-left: 10px;
 }
@@ -404,7 +408,7 @@ footer {
    user-select: text;
 }
 
-.params, .props {
+table {
   border-spacing: 0;
   border: 1px solid #ddd;
   border-collapse: collapse;
@@ -413,6 +417,20 @@ footer {
   width: 100%;
   font-size: 14px;
   margin: 1em 0;
+}
+
+td, th {
+   margin: 0px;
+   text-align: left;
+   vertical-align: top;
+   padding: 10px;
+   display: table-cell;
+}
+
+thead tr, thead tr {
+   background-color: #fff;
+   font-weight: bold;
+   border-bottom: 1px solid #ddd;
 }
 
 .params .type {
@@ -429,26 +447,8 @@ footer {
    font-size: 100%;
 }
 
-.params td, .params th, .props td, .props th {
-   margin: 0px;
-   text-align: left;
-   vertical-align: top;
-   padding: 10px;
-   display: table-cell;
-}
-
 .params td {
    border-top: 1px solid #eee
-}
-
-.params thead tr, .props thead tr {
-   background-color: #fff;
-   font-weight: bold;
-}
-
-.params .params thead tr, .props .props thead tr {
-   background-color: #fff;
-   font-weight: bold;
 }
 
 .params td.description > p:first-child, .props td.description > p:first-child {
@@ -649,39 +649,38 @@ span.param-type, .params td .param-type, .param-type dd {
   }
 }
 
-/** Add a '~' to inner members */
-[data-type="inner-member"] a::before,
-[data-type="inner-method"] a::before {
+
+[data-scope="inner"] a,
+[data-access="private"] a {
+  color: hsl(207, 1%, 60%) !important;
+}
+
+[data-type="method"][data-scope="static"] a,
+[data-type="method"][data-scope="instance"] a {
+  color: #2f6592;
+}
+
+[data-type="member"] a {
+  color: #2f9266;
+}
+
+/* add '~' before inner members and methods */
+[data-scope="inner"] a::before {
   content: '~';
   display: inline-block;
   margin-left: -12px;
   margin-right: 5px;
 }
 
-[data-type="inner-member"] a,
-[data-access="private"] a,
-[data-type="inner-method"] a {
-  color: hsl(207, 1%, 60%) !important;
-}
-
-[data-type="static-method"] a,
-[data-type="instance-method"] a {
-  color: #2f6592;
-}
-
-[data-type="static-member"] a,
-[data-type="instance-member"] a {
-  color: #2f9266;
-}
-
-[data-type="instance-member"] a::before,
-[data-type="instance-method"] a::before {
+/* add '#' before instance members and methods */
+[data-scope="instance"] a::before {
   content: '#';
   display: inline-block;
   margin-left: -13px;
   margin-right: 5px;
 }
 
+/* add 'a' after async methods */
 [data-async="true"] a::after {
     content: 'a';
     background-color: #d3d3d3;
@@ -689,4 +688,7 @@ span.param-type, .params td .param-type, .param-type dd {
     margin-left: 8px;
     border-radius: 2px;
     padding: 0px 3px;
+
+#disqus_thread {
+    margin-left: 30px;
 }
