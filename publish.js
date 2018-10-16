@@ -20,9 +20,30 @@ var hasOwnProp = Object.prototype.hasOwnProperty;
 
 var data, view;
 
-var docdash = env && env.conf && env.conf.docdash || {};
-
 var outdir = path.normalize(env.opts.destination);
+
+/*
+ * Safe retrieval of configuration options
+ *
+ * Example: option('conf.templates.default.useLongnameInNav')
+ *
+ */
+function option(path, defaultValue) {
+  var opt = env;
+  if (opt) {
+    var p = path.split('.');
+    var i = 0;
+    while (i < p.length) {
+      opt = opt[p[i]];
+      i += 1;
+      if (typeof opt != 'object' || !opt) break;
+    }
+    if (i == p.length && opt !== undefined) {
+      return opt;
+    }
+  }
+  return defaultValue;
+}
 
 function copyFile(source, target, cb) {
   var cbCalled = false;
@@ -153,7 +174,7 @@ function getTypeLongName(name) {
 }
 
 function formattype(type) {
-  if (docdash.compactLongTypes) {
+  if (option('conf.docdash.compactLongTypes')) {
     return htmlsafe(getTypeShortName(type));
   }
   return htmlsafe(type);
@@ -174,7 +195,7 @@ function parseCompoundType(type) {
 
   while ((match = r.exec(type)) !== null) {
     var name = match[0];
-    var longname = docdash.expandShortTypes ? getTypeLongName(name) : name;
+    var longname = option('conf.docdash.expandShortTypes') ? getTypeLongName(name) : name;
     var replace = typeExists(longname) ? linkto(longname, formattype(longname)) : null;
     repl.push({ from: match.index, to: r.lastIndex, replace: replace });
   }
@@ -204,11 +225,6 @@ function buildItemTypeStrings(item) {
   if (item && item.type && item.type.names) {
     item.type.names.forEach(function(name) {
       types.push(linkToType(name));
-      // // find long name for short type name
-      // if (docdash.expandShortTypes) {
-      //   name = getTypeLongName(name);
-      // }
-      // types.push(linkto(name, formattype(name) + 'bits'));
     });
   }
   return types;
@@ -391,7 +407,9 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
   if (items && items.length) {
     var itemsNav = '';
 
-    // itemsNav += '<pre>' + JSON.stringify(items, null, '  ') + '</pre>';
+    // // sort items by name
+    // var tb = taffy(items);
+    // items = tb().order('name').get();
 
     items.forEach(function(item) {
       if (!hasOwnProp.call(item, 'longname')) {
@@ -399,19 +417,21 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
         itemsNav += '</li>';
       } else if (!hasOwnProp.call(itemsSeen, item.longname)) {
         var displayName;
-        var docdash = env && env.conf && env.conf.docdash || {};
-        var conf = env && env.conf || {};
 
-        if (conf.templates.default.useLongnameInNav) {
+        if (option('conf.templates.default.useLongnameInNav')) {
           displayName = item.longname;
         } else {
           displayName = item.name;
         }
         itemsNav += '<li>' + linktoFn(item.longname, displayName.replace(/\b(module|event):/g, ''));
 
-        if (typeof docdash.navClassDetails != "undefined" && docdash.navClassDetails) {
-          var selection = data({ kind: ['member', 'function'], memberof: item.longname }, docdash.navClassFilter)
-            .order(docdash.menuOrder || 'kind, scope desc, name')
+        if (option('conf.docdash.navClassDetails', true)) {
+          var selection = data({
+                kind: ['member', 'function'],
+                memberof: item.longname
+              },
+              option('conf.docdash.navClassFilter'))
+            .order(option('conf.docdash.menuOrder', 'kind, scope desc, name'))
             .get();
 
           function add(list, type, cls) {
@@ -423,7 +443,7 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
                   " data-access='" + item.access + "'" +
                   " data-async='" + item.async + "'";
 
-                if (docdash.collapse)
+                if (option('conf.docdash.collapse'))
                   itemsNav += " style='display: none;'";
                 itemsNav += ">";
                 itemsNav += linkto(item.longname, item.name);
@@ -477,13 +497,13 @@ function buildNav(members) {
   var nav = '<h2><a href="index.html">Home</a></h2>';
   var seen = {};
   var seenTutorials = {};
-  var docdash = env && env.conf && env.conf.docdash || {};
-  if (docdash.menu) {
-    for (var menu in docdash.menu) {
+  var optMenu = option('conf.docdash.menu');
+  if (optMenu) {
+    for (var menu in optMenu) {
       nav += '<h2><a ';
       // add attributes
-      for (var attr in docdash.menu[menu]) {
-        nav += attr + '="' + docdash.menu[menu][attr] + '" ';
+      for (var attr in optMenu[menu]) {
+        nav += attr + '="' + optMenu[menu][attr] + '" ';
       }
       nav += '>' + menu + '</a></h2>';
     }
@@ -491,7 +511,7 @@ function buildNav(members) {
   var defaultOrder = [
     'Classes', 'Modules', 'Externals', 'Events', 'Namespaces', 'Mixins', 'Tutorials', 'Interfaces'
   ];
-  var order = docdash.sectionOrder || docdash.navSectionOrder || defaultOrder;
+  var order = option('conf.docdash.navSectionOrder', defaultOrder);
   var sections = {
     Classes: buildMemberNav(members.classes, 'Classes', seen, linkto),
     Modules: buildMemberNav(members.modules, 'Modules', {}, linkto),
@@ -508,7 +528,7 @@ function buildNav(members) {
     var globalNav = '';
 
     members.globals.forEach(function(g) {
-      if ((docdash.typedefs || g.kind !== 'typedef') && !hasOwnProp.call(seen, g.longname)) {
+      if ((option('conf.docdash.typedefs') || g.kind !== 'typedef') && !hasOwnProp.call(seen, g.longname)) {
         globalNav += '<li>' + linkto(g.longname, g.name) + '</li>';
       }
       seen[g.longname] = true;
@@ -531,11 +551,10 @@ function buildNav(members) {
    @param {Tutorial} tutorials
 */
 exports.publish = function(taffyData, opts, tutorials) {
-  var docdash = env && env.conf && env.conf.docdash || {};
   data = taffyData;
 
-  var conf = env.conf.templates || {};
-  conf.default = conf.default || {};
+  // var conf = option('conf.templates', {});
+  // conf.default = conf.default || {};
 
   var templatePath = path.normalize(opts.template);
   view = new template.Template(path.join(templatePath, 'tmpl'));
@@ -549,9 +568,9 @@ exports.publish = function(taffyData, opts, tutorials) {
   helper.registerLink('global', globalUrl);
 
   // set up templating
-  view.layout = conf.default.layoutFile ?
-    path.getResourcePath(path.dirname(conf.default.layoutFile),
-      path.basename(conf.default.layoutFile)) :
+  var optLayoutFile = option('conf.templates.default.layoutFile');
+  view.layout = optLayoutFile ?
+    path.getResourcePath(path.dirname(optLayoutFile), path.basename(optLayoutFile)) :
     'layout.tmpl';
 
   // set up tutorials for helper
@@ -559,14 +578,19 @@ exports.publish = function(taffyData, opts, tutorials) {
 
   data = helper.prune(data);
 
-  if (docdash.sort !== false) data.sort('longname, version, since');
+  // if (docdash.sort !== false) data.sort('longname, version, since');
+  var defaultSort = option('conf.templates.default.useLongnameInNav') ? 'longname, version, since' : 'name, version, since';
+  if (option('conf.docdash.sort', true)) {
+    data.sort(option('conf.docdash.sortFields', defaultSort));
+  }
   helper.addEventListeners(data);
 
   var sourceFiles = {};
   var sourceFilePaths = [];
   data().each(function(doclet) {
-    if (docdash.removeQuotes) {
-      if (docdash.removeQuotes === "all") {
+    var optRemoveQuotes = option('conf.docdash.removeQuotes');
+    if (optRemoveQuotes) {
+      if (optRemoveQuotes === "all") {
         if (doclet.name) {
           doclet.name = doclet.name.replace(/"/g, '');
           doclet.name = doclet.name.replace(/'/g, '');
@@ -575,7 +599,7 @@ exports.publish = function(taffyData, opts, tutorials) {
           doclet.longname = doclet.longname.replace(/"/g, '');
           doclet.longname = doclet.longname.replace(/'/g, '');
         }
-      } else if (docdash.removeQuotes === "trim") {
+      } else if (optRemoveQuotes === "trim") {
         if (doclet.name) {
           doclet.name = doclet.name.replace(/^"(.*)"$/, '$1');
           doclet.name = doclet.name.replace(/^'(.*)'$/, '$1');
@@ -643,12 +667,12 @@ exports.publish = function(taffyData, opts, tutorials) {
   // copy user-specified static files to outdir
   var staticFilePaths, staticFileFilter, staticFileScanner;
 
-  if (conf.default.staticFiles) {
+  if (option('conf.templates.default.staticFiles')) {
     // The canonical property name is `include`. We accept `paths` for backwards compatibility
     // with a bug in JSDoc 3.2.x.
-    staticFilePaths = conf.default.staticFiles.include ||
-      conf.default.staticFiles.paths || [];
-    staticFileFilter = new(require('jsdoc/src/filter')).Filter(conf.default.staticFiles);
+    staticFilePaths = option('conf.templates.default.staticFiles.include',
+      option('conf.templates.default.staticFiles.paths'), []);
+    staticFileFilter = new(require('jsdoc/src/filter')).Filter(option('conf.templates.default.staticFiles'));
     staticFileScanner = new(require('jsdoc/src/scanner')).Scanner();
 
     staticFilePaths.forEach(function(filePath) {
@@ -717,9 +741,7 @@ exports.publish = function(taffyData, opts, tutorials) {
   members.tutorials = tutorials.children;
 
   // output pretty-printed source files by default
-  var outputSourceFiles = conf.default && conf.default.outputSourceFiles !== false ?
-    true :
-    false;
+  var outputSourceFiles = option('conf.templates.default.outputSourceFiles', true);
 
   // add template helpers
   view.find = find;
@@ -730,8 +752,8 @@ exports.publish = function(taffyData, opts, tutorials) {
   view.outputSourceFiles = outputSourceFiles;
   view.formattype = formattype;
   view.linkToType = linkToType;
-  view.docdash = docdash;
-  view.debug = docdash.debug;
+  view.option = option;
+  view.debug = option('conf.docdash.debug');
 
   // once for all
   view.nav = buildNav(members);
