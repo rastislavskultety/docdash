@@ -655,12 +655,12 @@ span.param-type, .params td .param-type, .param-type dd {
   color: hsl(207, 1%, 60%) !important;
 }
 
-[data-type="method"][data-scope="static"] a,
-[data-type="method"][data-scope="instance"] a {
+[data-kind="function"][data-scope="static"] a,
+[data-kind="function"][data-scope="instance"] a {
   color: #2f6592;
 }
 
-[data-type="member"] a {
+[data-kind="member"] a {
   color: #2f9266;
 }
 

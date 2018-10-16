@@ -1,6 +1,7 @@
-/* eslint quotes: 0, strict: 0 */
+/* eslint-disable quotes */
 /* global env: true */
 
+// eslint-disable-next-line
 'use strict';
 
 var doop = require('jsdoc/util/doop');
@@ -15,7 +16,6 @@ var util = require('util');
 var htmlsafe = helper.htmlsafe;
 var linkto = helper.linkto;
 var resolveAuthorLinks = helper.resolveAuthorLinks;
-// var scopeToPunc = helper.scopeToPunc;
 var hasOwnProp = Object.prototype.hasOwnProperty;
 
 var data, view;
@@ -154,7 +154,7 @@ function addParamAttributes(params) {
 function getTypeShortName(name) {
   var match = name.match(/.*[.~#]([\w\d]+)/);
   if (match) return match[1];
-  var match = name.match(/\s*external:([\w\d]+)/);
+  match = name.match(/\s*external:([\w\d]+)/);
   if (match) return match[1];
   return name;
 }
@@ -401,73 +401,243 @@ function attachModuleSymbols(doclets, modules) {
   });
 }
 
-function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
-  var nav = '';
+function createMenuItems(items, itemHeading, itemsSeen, linktoFn) {
+  var paths = { heading: itemHeading, children: {}, items: [] };
+
+  function insertPath(path, item) {
+    if (path && option('conf.docdash.navGroupByPath')) {
+      var p = path.split('/');
+      var current = paths;
+      var slug = '';
+      p.forEach(function(n) {
+        slug += n + '/';
+        current = current.children[n] = current.children[n] || { heading: slug, children: {}, items: [] };
+      });
+      current.items.push(item);
+    } else {
+      paths.items.push(item);
+    }
+  }
 
   if (items && items.length) {
-    var itemsNav = '';
-
-    // // sort items by name
-    // var tb = taffy(items);
-    // items = tb().order('name').get();
-
     items.forEach(function(item) {
       if (!hasOwnProp.call(item, 'longname')) {
-        itemsNav += '<li>' + linktoFn('', item.name);
-        itemsNav += '</li>';
+        insertPath(null, {
+          link: linktoFn('', item.name)
+        });
       } else if (!hasOwnProp.call(itemsSeen, item.longname)) {
         var displayName;
 
         if (option('conf.templates.default.useLongnameInNav')) {
-          displayName = item.longname;
+          displayName = item.longname.replace(/\b(module|event):/g, '');
         } else {
           displayName = item.name;
         }
-        itemsNav += '<li>' + linktoFn(item.longname, displayName.replace(/\b(module|event):/g, ''));
 
-        if (option('conf.docdash.navClassDetails', true)) {
+        var path, name;
+        var match = displayName.match(/(.*)\/([^/]+)/);
+        if (match) {
+          path = match[1];
+          name = match[2];
+        }
+
+        var parent = {
+          link: linktoFn(item.longname, name || displayName),
+          docItem: Object.assign({}, item),
+          items: []
+        };
+
+        insertPath(path, parent);
+
+        if (option('conf.docdash.navDetails', true)) {
           var selection = data({
                 kind: ['member', 'function'],
                 memberof: item.longname
               },
-              option('conf.docdash.navClassFilter'))
-            .order(option('conf.docdash.menuOrder', 'kind, scope desc, name'))
+              option('conf.docdash.navDetailsFilter'))
+            .order(option('conf.docdash.navDetailsOrder', 'kind, scope desc, name'))
             .get();
 
-          function add(list, type, cls) {
+          function add(list, cls) {
             if (list.length) {
-              itemsNav += "<ul class='" + cls + "'>";
-              list.forEach(function(item) {
-                itemsNav += "<li data-scope='" + item.scope +
-                  "' data-type='" + type + "'" +
-                  " data-access='" + item.access + "'" +
-                  " data-async='" + item.async + "'";
+              var child = {
+                class: cls,
+                items: []
+              };
+              parent.items.push(child);
 
-                if (option('conf.docdash.collapse'))
-                  itemsNav += " style='display: none;'";
-                itemsNav += ">";
-                itemsNav += linkto(item.longname, item.name);
-                itemsNav += "</li>";
+              list.forEach(function(item) {
+                child.items.push({
+                  link: linkto(item.longname, item.name),
+                  docItem: Object.assign({}, item)
+                });
               });
-              itemsNav += "</ul>";
             }
           };
 
-          add(selection.filter(function(s) { return s.kind == 'member'; }), 'member', 'members');
-          add(selection.filter(function(s) { return s.kind == 'function'; }), 'method', 'methods');
+          add(selection.filter(function(s) { return s.kind == 'member'; }), 'members');
+          add(selection.filter(function(s) { return s.kind == 'function'; }), 'methods');
         }
-
-        itemsNav += '</li>';
         itemsSeen[item.longname] = true;
       }
     });
-
-    if (itemsNav !== '') {
-      nav += '<h3>' + itemHeading + '</h3><ul>' + itemsNav + '</ul>';
-    }
   }
 
-  return nav;
+  return paths;
+}
+
+function buildMenuHtml(menuData, level) {
+  function itemData(docItem, name) {
+    return docItem[name] ? ' data-' + name + '="' + docItem[name] + '"' : '';
+  }
+
+  function indent(offset) {
+    offset = offset || 0;
+    return '  '.repeat(level + offset + 1);
+  }
+
+  function addItem(item) {
+    var result = '';
+    if (item.docItem) {
+      var data = itemData(item.docItem, 'kind') +
+        itemData(item.docItem, 'access') +
+        itemData(item.docItem, 'async');
+      // var collapse = level > 1 && option('conf.docdash.collapse') ? ' style="display: none;"' : '';
+
+      // result += indent() + '<li' + data + collapse + '>\n';
+      result += indent() + '<li' + data + '>\n';
+      if (item.link) {
+        result += indent(1) + item.link + '\n';
+      }
+      result += buildMenuHtml(item, level + 1);
+      result += indent() + '</li>\n';
+    } else if (item.link) {
+      result += indent() + '<li>\n';
+      result += indent(1) + item.link + '\n';
+      result += buildMenuHtml(item, level + 1);
+      result += indent() + '</li>\n';
+    } else {
+      result += buildMenuHtml(item, level + 1);
+    }
+
+    return result;
+  }
+
+  level = level || 0;
+  var result = '';
+
+  if (menuData) {
+    var directChildrenCount = 0;
+    var items = menuData.items || [];
+    if (items) {
+      items.forEach(function(item) {
+        result += addItem(item);
+        directChildrenCount += 1;
+      });
+    }
+    for (var child in menuData.children) {
+      result += buildMenuHtml(menuData.children[child], level + 1);
+    }
+
+    if (result) {
+      // if there are no direct children then do not insert any group
+      if (directChildrenCount == 0 && option('conf.docdash.navSkipEmptyGroups', true)) {
+        return result;
+      }
+
+      var html = '';
+
+      // crate menu group heading
+      if (menuData.heading) {
+        // main heading and top level
+        if (level == 0) {
+          var hlevel = '3';
+          html += indent(-1) + '<h' + hlevel + '>\n' +
+            indent(0) + menuData.heading + '\n' +
+            indent(-1) + '</h' + hlevel + '>\n';
+        } else {
+          html += indent(-1) + '<li>\n' +
+            indent() + menuData.heading + '\n' +
+            indent(-1) + '</li>\n';
+        }
+      }
+
+      var cls = menuData.class ? ' class="' + menuData.class + '"' : '';
+      html += indent(-1) + '<ul' + cls + '>\n' +
+        result +
+        indent(-1) + '</ul>\n';
+      return html;
+    }
+  }
+  return '';
+}
+
+function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
+  var r = createMenuItems(items, itemHeading, itemsSeen, linktoFn);
+  var h = buildMenuHtml(r);
+  return h;
+  //
+  // var nav = '';
+  //
+  // if (items && items.length) {
+  //   var itemsNav = '';
+  //   var displayName;
+  //
+  //   items.forEach(function(item) {
+  //     if (!hasOwnProp.call(item, 'longname')) {
+  //       itemsNav += '<li>' + linktoFn('', item.name);
+  //       itemsNav += '</li>';
+  //     } else if (!hasOwnProp.call(itemsSeen, item.longname)) {
+  //       if (option('conf.templates.default.useLongnameInNav')) {
+  //         displayName = item.longname.replace(/\b(module|event):/g, '');
+  //       } else {
+  //         displayName = item.name;
+  //       }
+  //       itemsNav += '<li>' + linktoFn(item.longname, displayName);
+  //
+  //       if (option('conf.docdash.navDetails', true)) {
+  //         var selection = data({
+  //               kind: ['member', 'function'],
+  //               memberof: item.longname
+  //             },
+  //             option('conf.docdash.navDetailsFilter'))
+  //           .order(option('conf.docdash.navDetailsOrder', 'kind, scope desc, name'))
+  //           .get();
+  //
+  //         function add(list, type, cls) {
+  //           if (list.length) {
+  //             itemsNav += "<ul class='" + cls + "'>";
+  //             list.forEach(function(item) {
+  //               itemsNav += "<li data-scope='" + item.scope +
+  //                 "' data-type='" + type + "'" +
+  //                 " data-access='" + item.access + "'" +
+  //                 " data-async='" + item.async + "'";
+  //
+  //               if (option('conf.docdash.collapse'))
+  //                 itemsNav += " style='display: none;'";
+  //               itemsNav += ">";
+  //               itemsNav += linkto(item.longname, item.name);
+  //               itemsNav += "</li>";
+  //             });
+  //             itemsNav += "</ul>";
+  //           }
+  //         };
+  //
+  //         add(selection.filter(function(s) { return s.kind == 'member'; }), 'member', 'members');
+  //         add(selection.filter(function(s) { return s.kind == 'function'; }), 'method', 'methods');
+  //       }
+  //
+  //       itemsNav += '</li>';
+  //       itemsSeen[item.longname] = true;
+  //     }
+  //   });
+  //
+  //   if (itemsNav !== '') {
+  //     nav += '<h3>' + itemHeading + '</h3><ul>' + itemsNav + '</ul>';
+  //   }
+  // }
+  //
+  // return nav;
 }
 
 function linktoTutorial(longName, name) {
