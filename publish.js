@@ -20,6 +20,8 @@ var hasOwnProp = Object.prototype.hasOwnProperty;
 
 var data, view;
 
+var docdash = env && env.conf && env.conf.docdash || {};
+
 var outdir = path.normalize(env.opts.destination);
 
 function copyFile(source, target, cb) {
@@ -125,14 +127,75 @@ function addParamAttributes(params) {
   }).map(updateItemName);
 }
 
-function formattype(type) {
-  var docdash = env && env.conf && env.conf.docdash || {};
+/*
+ * Compact types from long to short name 
+ */
+function getTypeShortName(name) {
+  var match = name.match(/.*[.~#]([\w\d]+)/);
+  if (match) return match[1];
+  var match = name.match(/\s*external:([\w\d]+)/);
+  if (match) return match[1];
+  return name;
+}
 
-  if (docdash.compactTypes) {
-    var match = type.match(/.*[.~#](\w+)/);
-    if (match) return htmlsafe(match[1]);
+/*
+ *  Find long name for short type name
+ */
+function getTypeLongName(name) {
+  var find = data({
+    kind: ['typedef', 'class', 'external'],
+    name: name
+  }).get();
+  if (find.length == 1) {
+    return find[0].longname;
+  }
+  return name;
+}
+
+function formattype(type) {
+  if (docdash.compactLongTypes) {
+    return htmlsafe(getTypeShortName(type));
   }
   return htmlsafe(type);
+}
+
+function typeExists(longname) {
+  var find = data({
+    kind: ['typedef', 'class', 'external'],
+    longname: longname
+  }).get();
+  return find.length == 1;
+}
+
+function parseCompoundType(type) {
+  var r = new RegExp(/(\bmodule:[/\w\d]+[\w\d][~#\.][\w\d]+\b)|(\b[\w\d]+\b)/g);
+  var match;
+  var repl = [];
+
+  while ((match = r.exec(type)) !== null) {
+    var name = match[0];
+    var longname = docdash.expandShortTypes ? getTypeLongName(name) : name;
+    var replace = typeExists(longname) ? linkto(longname, formattype(longname)) : null;
+    repl.push({ from: match.index, to: r.lastIndex, replace: replace });
+  }
+
+  var result = '';
+  var last = 0;
+  repl.forEach(function(r) {
+    if (r.replace) {
+      result += htmlsafe(type.substring(last, r.from, r.to));
+      result += r.replace;
+      last = r.to;
+    }
+  });
+  result += htmlsafe(type.substring(last));
+  // return htmlsafe(type);
+  // return JSON.stringify(repl);
+  return result;
+}
+
+function linkToType(name) {
+  return parseCompoundType(name);
 }
 
 function buildItemTypeStrings(item) {
@@ -140,10 +203,14 @@ function buildItemTypeStrings(item) {
 
   if (item && item.type && item.type.names) {
     item.type.names.forEach(function(name) {
-      types.push(linkto(name, formattype(name)));
+      types.push(linkToType(name));
+      // // find long name for short type name
+      // if (docdash.expandShortTypes) {
+      //   name = getTypeLongName(name);
+      // }
+      // types.push(linkto(name, formattype(name) + 'bits'));
     });
   }
-
   return types;
 }
 
@@ -169,7 +236,7 @@ function addNonParamAttributes(items) {
 
 function addSignatureParams(f) {
   var params = f.params ? addParamAttributes(f.params) : [];
-  f.signature = util.format('%s(%s)', (f.signature || ''), params.join(', '));
+  f.signature = util.format('%s(%s) ', (f.signature || ''), params.join(', '));
 }
 
 function addSignatureReturns(f) {
@@ -206,7 +273,6 @@ function addSignatureReturns(f) {
 
 function addSignatureTypes(f) {
   var types = f.type ? buildItemTypeStrings(f) : [];
-
   f.signature = (f.signature || '') + '<span class="type-signature">' +
     (types.length ? ' :' + types.join('|') : '') + '</span>';
 }
@@ -663,9 +729,20 @@ exports.publish = function(taffyData, opts, tutorials) {
   view.htmlsafe = htmlsafe;
   view.outputSourceFiles = outputSourceFiles;
   view.formattype = formattype;
+  view.linkToType = linkToType;
+  view.docdash = docdash;
+  view.debug = docdash.debug;
 
   // once for all
   view.nav = buildNav(members);
+  // view.nav = '<pre>';
+  // data().each(function(doclet) {
+  //   view.nav += doclet.kind + ': "' + doclet.longname + '"  ' + (doclet.meta && doclet.meta.filename) + '\n';
+  //
+  //   // view.nav += JSON.stringify(doclet.meta) + '\n\n';
+  // });
+  // view.nav += '</pre>';
+
   attachModuleSymbols(find({ longname: { left: 'module:' } }), members.modules);
 
   // generate the pretty-printed source files first so other pages can link to them

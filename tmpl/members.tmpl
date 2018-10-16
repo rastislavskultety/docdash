@@ -4,12 +4,21 @@ var self = this;
 ?>
 <h4 class="name" id="<?js= id ?>"><?js= data.attribs + name + (data.signature ? data.signature : '') ?></h4>
 
+<?js if (self.debug) { ?>
+  <pre>
+    kind: <?js= self.htmlsafe(data.kind) ?>
+    name: <?js= self.htmlsafe(data.name) ?>
+    longname: <?js= self.htmlsafe(data.longname) ?>
+    memberof: <?js= self.htmlsafe(data.memberof) ?>
+    signature: <?js= self.htmlsafe(data.signature) ?>
+  </pre>
+<?js } ?>
+
 <?js if (data.summary) { ?>
 <p class="summary"><?js= summary ?></p>
 <?js } ?>
 
 <?js= this.partial('details.tmpl', data) ?>
-
 <?js if (data.description) { ?>
 <div class="description">
     <?js= data.description ?>

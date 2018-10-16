@@ -154,6 +154,14 @@
         <h3 class="subsection-title">Type Definitions</h3>
 
         <?js typedefs.forEach(function(e) {
+                if (self.debug) { ?>
+                  <pre>
+                    kind: <?js= e.kind ?>
+                    name: <?js= e.name ?>
+                    longname: <?js= e.longname ?>
+                    memberof: <?js= e.memberof ?>
+                  </pre>
+                <?js }
                 if (e.signature) {
             ?>
                 <?js= self.partial('method.tmpl', e) ?>
